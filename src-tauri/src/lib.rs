@@ -1,5 +1,6 @@
 use tauri::{
     image::Image,
+    menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent, MouseButtonState},
     Manager, WebviewWindow, Emitter,
 };
@@ -69,10 +70,21 @@ pub fn run() {
             let tray_icon = Image::from_bytes(include_bytes!("../icons/tray-icon.png"))
                 .expect("failed to load tray icon");
 
+            // Right-click menu with Quit
+            let quit_item = MenuItem::with_id(app, "quit", "Quit ZoneBar", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&quit_item])?;
+
             TrayIconBuilder::new()
                 .icon(tray_icon)
                 .icon_as_template(true)
                 .tooltip("ZoneBar")
+                .menu(&menu)
+                .menu_on_left_click(false)
+                .on_menu_event(|app, event| {
+                    if event.id.as_ref() == "quit" {
+                        app.exit(0);
+                    }
+                })
                 .on_tray_icon_event(move |tray_handle, event| {
                     tauri_plugin_positioner::on_tray_event(tray_handle.app_handle(), &event);
                     if let TrayIconEvent::Click { button_state, .. } = &event {

@@ -41,7 +41,7 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder }: ZoneListProp
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto py-1">
       {zones.map((zone, index) => {
         const info = zoneInfos.get(zone.id);
         if (!info) return null;
