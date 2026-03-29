@@ -9,10 +9,8 @@
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
-  "tauri": {
-    "macOSPrivateApi": true
-  },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "label": "main",
