@@ -36,7 +36,7 @@ export function TimeDisplay({ selectedInstant, mode, onTimeTyped }: TimeDisplayP
       setEditing(false);
     } else {
       setShaking(true);
-      setTimeout(() => setShaking(false), 300);
+      setTimeout(() => setShaking(false), 250);
     }
   };
 
@@ -50,39 +50,34 @@ export function TimeDisplay({ selectedInstant, mode, onTimeTyped }: TimeDisplayP
     }
   };
 
-  const handleBlur = () => {
-    setEditing(false);
-  };
-
   if (editing) {
     return (
-      <div className="text-center py-3">
+      <div className="flex items-center justify-center py-2 px-3 border-b border-white/[0.06]">
         <input
           ref={inputRef}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          className={`bg-[#2a2a5a] border border-[#4ade80] text-[#4ade80] text-center text-lg font-bold rounded-md px-3 py-1 w-[100px] outline-none ${shaking ? "animate-shake" : ""}`}
-          placeholder="3:00 PM"
+          onBlur={() => setEditing(false)}
+          className={`bg-transparent border border-[#4ade80]/40 text-[#4ade80] text-center text-sm font-semibold rounded px-2 py-0.5 w-[72px] outline-none focus:border-[#4ade80] ${shaking ? "animate-shake" : ""}`}
+          placeholder="3pm"
         />
-        <div className="text-[10px] text-[#666] mt-1">press Enter to apply</div>
       </div>
     );
   }
 
   return (
-    <div className="text-center py-3">
+    <div className="flex items-center justify-center py-2 px-3 border-b border-white/[0.06]">
       <button
         onClick={handleClick}
-        className="bg-[#4ade80] text-black text-lg font-bold rounded-md px-4 py-1 cursor-pointer border-none hover:bg-[#22c55e] transition-colors"
+        className="text-[#4ade80] text-sm font-semibold cursor-pointer bg-transparent border-none hover:text-[#22c55e] transition-colors tracking-wide"
       >
         {displayTime}
       </button>
-      <div className="text-[10px] text-[#666] mt-1">
-        {mode === "live" ? "your local time" : "click to change"}
-      </div>
+      {mode === "fixed" && (
+        <span className="text-[10px] text-white/20 ml-2">adjusted</span>
+      )}
     </div>
   );
 }

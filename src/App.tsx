@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import { useTimeModel } from "./hooks/useTimeModel";
 import { usePreferences } from "./hooks/usePreferences";
 import { getZoneInfo, ZoneInfo } from "./hooks/useTimezones";
@@ -11,8 +12,8 @@ import { TimeSlider } from "./components/TimeSlider";
 function App() {
   const timeModel = useTimeModel();
   const { zones, loaded, addZone, removeZone, reorderZones } = usePreferences();
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  // Compute zone infos for all zones
   const zoneInfos = useMemo(() => {
     const map = new Map<string, ZoneInfo>();
     for (const zone of zones) {
@@ -21,14 +22,27 @@ function App() {
     return map;
   }, [zones, timeModel.selectedInstant]);
 
-  // Global Esc handler: close popover if no input is focused
+  // Auto-resize window to fit content
+  useEffect(() => {
+    if (!loaded) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const resizeObserver = new ResizeObserver(() => {
+      const h = el.scrollHeight;
+      if (h > 0) {
+        invoke("resize_window", { height: h }).catch(() => {});
+      }
+    });
+    resizeObserver.observe(el);
+    return () => resizeObserver.disconnect();
+  }, [loaded]);
+
+  // Global Esc handler
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
-          return; // Let the input's own handler deal with it
-        }
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
         getCurrentWindow().hide();
       }
     };
@@ -36,38 +50,25 @@ function App() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  if (!loaded) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-[#888] text-sm">Loading...</p>
-      </div>
-    );
-  }
+  if (!loaded) return null;
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Fixed top: Time display */}
+    <div ref={rootRef} className="flex flex-col">
       <TimeDisplay
         selectedInstant={timeModel.selectedInstant}
         mode={timeModel.mode}
         onTimeTyped={timeModel.setTypedTime}
       />
-
-      {/* Scrollable middle: Zone list + Add button */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <ZoneList
-          zones={zones}
-          zoneInfos={zoneInfos}
-          onRemove={removeZone}
-          onReorder={reorderZones}
-        />
-        <AddZone
-          existingZoneIds={zones.map((z) => z.id)}
-          onAdd={addZone}
-        />
-      </div>
-
-      {/* Fixed bottom: Slider */}
+      <ZoneList
+        zones={zones}
+        zoneInfos={zoneInfos}
+        onRemove={removeZone}
+        onReorder={reorderZones}
+      />
+      <AddZone
+        existingZoneIds={zones.map((z) => z.id)}
+        onAdd={addZone}
+      />
       <TimeSlider
         offset={timeModel.sliderOffset}
         onChange={timeModel.setSliderOffset}

@@ -15,8 +15,8 @@
       {
         "label": "main",
         "title": "ZoneBar",
-        "width": 500,
-        "height": 600,
+        "width": 320,
+        "height": 280,
         "visible": false,
         "decorations": false,
         "transparent": true,

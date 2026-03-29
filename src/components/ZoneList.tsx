@@ -19,18 +19,13 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder }: ZoneListProp
     setDragIndex(index);
     dragNodeRef.current = e.currentTarget as HTMLDivElement;
     e.dataTransfer.effectAllowed = "move";
-    // Make the drag image slightly transparent
     setTimeout(() => {
-      if (dragNodeRef.current) {
-        dragNodeRef.current.style.opacity = "0.4";
-      }
+      if (dragNodeRef.current) dragNodeRef.current.style.opacity = "0.3";
     }, 0);
   };
 
   const handleDragEnd = () => {
-    if (dragNodeRef.current) {
-      dragNodeRef.current.style.opacity = "1";
-    }
+    if (dragNodeRef.current) dragNodeRef.current.style.opacity = "1";
     if (dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
       onReorder(dragIndex, overIndex);
     }
@@ -46,7 +41,7 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder }: ZoneListProp
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-2 py-1">
+    <div className="flex-1 overflow-y-auto">
       {zones.map((zone, index) => {
         const info = zoneInfos.get(zone.id);
         if (!info) return null;
@@ -58,13 +53,6 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder }: ZoneListProp
             onDragStart={(e) => handleDragStart(e, index)}
             onDragEnd={handleDragEnd}
             onDragOver={(e) => handleDragOver(e, index)}
-            className={`transition-transform ${
-              overIndex === index && dragIndex !== null && dragIndex !== index
-                ? dragIndex < index
-                  ? "translate-y-1"
-                  : "-translate-y-1"
-                : ""
-            }`}
           >
             <ZoneRow
               zoneId={zone.id}

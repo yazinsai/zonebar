@@ -19,6 +19,20 @@ fn read_preferences(app: tauri::AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn resize_window(app: tauri::AppHandle, height: f64) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let current_size = window.outer_size().map_err(|e| e.to_string())?;
+        let scale = window.scale_factor().unwrap_or(1.0);
+        let physical_height = (height * scale) as u32;
+        let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+            width: current_size.width,
+            height: physical_height,
+        }));
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn write_preferences(app: tauri::AppHandle, data: String) -> Result<(), String> {
     let path = get_preferences_path(&app);
     if let Some(parent) = path.parent() {
@@ -43,7 +57,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![read_preferences, write_preferences])
+        .invoke_handler(tauri::generate_handler![read_preferences, write_preferences, resize_window])
         .setup(|app| {
             // Hide from Dock on macOS
             #[cfg(target_os = "macos")]
