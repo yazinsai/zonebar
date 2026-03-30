@@ -43,7 +43,7 @@ export function AddZone({ existingZoneIds, onAdd }: AddZoneProps) {
 
   if (!searching) {
     return (
-      <div className="py-1.5 px-4">
+      <div className="py-1.5 px-5">
         <button
           onClick={() => setSearching(true)}
           className="text-white/20 hover:text-white/40 text-[11px] cursor-pointer bg-transparent border-none transition-colors"
@@ -55,7 +55,7 @@ export function AddZone({ existingZoneIds, onAdd }: AddZoneProps) {
   }
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-5 py-2">
       <input
         ref={inputRef}
         type="text"

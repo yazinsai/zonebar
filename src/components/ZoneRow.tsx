@@ -14,12 +14,8 @@ export function ZoneRow({ zoneId, label, info, canRemove, onRemove }: ZoneRowPro
   const entry = TIMEZONE_LIST.find((t) => t.id === zoneId);
   const flag = entry?.flag ?? "🌐";
 
-  const offsetDisplay = info.abbreviation.startsWith("GMT")
-    ? info.utcOffset
-    : info.abbreviation;
-
   return (
-    <div className="group flex items-center gap-1.5 px-4 py-[7px] hover:bg-white/[0.03] transition-colors">
+    <div className="group flex items-center gap-1.5 px-5 py-[7px] hover:bg-white/[0.03] transition-colors">
       {/* Zone label */}
       <div className="w-[72px] min-w-[72px] flex items-baseline gap-1">
         <span className="text-[11px]">{flag}</span>
@@ -31,12 +27,12 @@ export function ZoneRow({ zoneId, label, info, canRemove, onRemove }: ZoneRowPro
         <span className="text-[13px] font-medium tabular-nums text-white/90">{info.time}</span>
       </div>
 
-      {/* Day label or offset */}
-      <div className="w-[42px] min-w-[42px] text-center">
+      {/* Relative offset or day label */}
+      <div className="w-[36px] min-w-[36px] text-center">
         {info.dayLabel ? (
           <span className="text-[9px] text-amber-400/80">{info.dayLabel === "Tomorrow" ? "+1d" : "-1d"}</span>
         ) : (
-          <span className="text-[9px] text-white/25">{offsetDisplay}</span>
+          <span className="text-[9px] text-white/25 tabular-nums">{info.relativeOffset}</span>
         )}
       </div>
 
