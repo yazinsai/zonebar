@@ -78,26 +78,16 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: npm run tauri build
 
-      - name: Upload to release
+      - name: Upload DMG to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Find built artifacts
           DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" 2>/dev/null | head -1)
-          APP_TAR=$(find src-tauri/target/release/bundle/macos -name "*.app.tar.gz" 2>/dev/null | head -1)
-
           if [[ -n "$DMG" ]]; then
             gh release upload "${RELEASE_TAG}" "$DMG" --clobber
-          fi
-          if [[ -n "$APP_TAR" ]]; then
-            gh release upload "${RELEASE_TAG}" "$APP_TAR" --clobber
-          fi
-          # Also upload the raw .app as a zip
-          APP=$(find src-tauri/target/release/bundle/macos -name "*.app" -maxdepth 1 2>/dev/null | head -1)
-          if [[ -n "$APP" ]]; then
-            cd src-tauri/target/release/bundle/macos
-            zip -r /tmp/ZoneBar.app.zip "$(basename "$APP")"
-            gh release upload "${RELEASE_TAG}" /tmp/ZoneBar.app.zip --clobber
+          else
+            echo "::error::No DMG found in build output"
+            exit 1
           fi
 
       - name: Cleanup keychain
