@@ -41,7 +41,41 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Import signing certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        if: env.MACOS_CERTIFICATE != ''
+        run: |
+          CERT_FILE=$(mktemp /tmp/cert.XXXXXX.p12)
+          KEYCHAIN_FILE="/tmp/build-$$-$(date +%s).keychain-db"
+          KEYCHAIN_PWD=$(openssl rand -base64 32)
+
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT_FILE"
+
+          curl -sL "https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer" -o /tmp/DeveloperIDG2CA.cer
+
+          security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_FILE"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_FILE"
+          security unlock-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_FILE"
+
+          security import /tmp/DeveloperIDG2CA.cer -k "$KEYCHAIN_FILE" -T /usr/bin/codesign
+          security import "$CERT_FILE" -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -k "$KEYCHAIN_FILE"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PWD" "$KEYCHAIN_FILE"
+          security list-keychains -d user -s "$KEYCHAIN_FILE" $(security list-keychains -d user | tr -d '"')
+
+          rm -f "$CERT_FILE" /tmp/DeveloperIDG2CA.cer
+
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_FILE" | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)"/\1/')
+          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_FILE=$KEYCHAIN_FILE" >> "$GITHUB_ENV"
+
       - name: Build Tauri app
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ env.CODESIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: npm run tauri build
 
       - name: Upload DMG to release
@@ -56,6 +90,12 @@ jobs:
             exit 1
           fi
 
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          if [[ -n "${KEYCHAIN_FILE:-}" ]]; then
+            security delete-keychain "$KEYCHAIN_FILE" 2>/dev/null || true
+          fi
 
   build-windows:
     runs-on: windows-latest
