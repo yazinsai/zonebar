@@ -96,3 +96,50 @@ jobs:
           if [[ -n "${KEYCHAIN_FILE:-}" ]]; then
             security delete-keychain "$KEYCHAIN_FILE" 2>/dev/null || true
           fi
+
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Resolve tag
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="${{ inputs.tag }}"
+          fi
+          echo "RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        run: npm run tauri build
+
+      - name: Upload MSI to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          MSI=$(find src-tauri/target/release/bundle/msi -name "*.msi" 2>/dev/null | head -1)
+          if [[ -n "$MSI" ]]; then
+            gh release upload "${RELEASE_TAG}" "$MSI" --clobber
+          else
+            echo "::error::No MSI found in build output"
+            exit 1
+          fi
