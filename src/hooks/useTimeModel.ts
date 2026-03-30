@@ -9,6 +9,7 @@ interface TimeModel {
   sliderOffset: number; // hours from now, -12 to +12
   setSliderOffset: (hours: number) => void;
   setTypedTime: (timeString: string) => boolean; // returns false if invalid
+  setTypedTimeForZone: (timeString: string, zoneId: string) => boolean;
   resetToNow: () => void;
 }
 
@@ -112,6 +113,53 @@ export function useTimeModel(): TimeModel {
     return true;
   }, []);
 
+  const setTypedTimeForZone = useCallback((timeString: string, zoneId: string): boolean => {
+    const parsed = parseTimeString(timeString);
+    if (!parsed) return false;
+
+    const now = new Date();
+
+    // Get today's date in the target zone
+    const zoneDateParts = new Intl.DateTimeFormat("en-US", {
+      timeZone: zoneId,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(now);
+    const zoneYear = parseInt(zoneDateParts.find((p) => p.type === "year")?.value ?? "0", 10);
+    const zoneMonth = parseInt(zoneDateParts.find((p) => p.type === "month")?.value ?? "0", 10) - 1;
+    const zoneDay = parseInt(zoneDateParts.find((p) => p.type === "day")?.value ?? "0", 10);
+
+    // Get the zone's current UTC offset by comparing UTC and zone wall clocks
+    const nowUtcH = now.getUTCHours();
+    const nowUtcM = now.getUTCMinutes();
+    const nowZoneParts = new Intl.DateTimeFormat("en-US", {
+      timeZone: zoneId,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+    const nowZoneH = parseInt(nowZoneParts.find((p) => p.type === "hour")?.value ?? "0", 10);
+    const nowZoneM = parseInt(nowZoneParts.find((p) => p.type === "minute")?.value ?? "0", 10);
+
+    let offsetMinutes = (nowZoneH * 60 + nowZoneM) - (nowUtcH * 60 + nowUtcM);
+    if (offsetMinutes > 720) offsetMinutes -= 1440;
+    if (offsetMinutes < -720) offsetMinutes += 1440;
+
+    // Target UTC = desired wall clock time in zone - zone's UTC offset
+    const targetUtcMs = Date.UTC(zoneYear, zoneMonth, zoneDay, parsed.hours, parsed.minutes, 0) - offsetMinutes * 60000;
+    const target = new Date(targetUtcMs);
+
+    setSelectedInstant(target);
+    setMode("fixed");
+
+    const diffMs = target.getTime() - now.getTime();
+    const diffHours = diffMs / (60 * 60 * 1000);
+    setSliderOffsetState(Math.max(-12, Math.min(12, diffHours)));
+
+    return true;
+  }, []);
+
   const resetToNow = useCallback(() => {
     setMode("live");
   }, []);
@@ -122,6 +170,7 @@ export function useTimeModel(): TimeModel {
     sliderOffset,
     setSliderOffset,
     setTypedTime,
+    setTypedTimeForZone,
     resetToNow,
   };
 }

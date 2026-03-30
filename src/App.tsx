@@ -64,6 +64,7 @@ function App() {
         zoneInfos={zoneInfos}
         onRemove={removeZone}
         onReorder={reorderZones}
+        onTimeTyped={timeModel.setTypedTimeForZone}
       />
       <AddZone
         existingZoneIds={zones.map((z) => z.id)}

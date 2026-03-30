@@ -8,9 +8,10 @@ interface ZoneListProps {
   zoneInfos: Map<string, ZoneInfo>;
   onRemove: (zoneId: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onTimeTyped: (timeString: string, zoneId: string) => boolean;
 }
 
-export function ZoneList({ zones, zoneInfos, onRemove, onReorder }: ZoneListProps) {
+export function ZoneList({ zones, zoneInfos, onRemove, onReorder, onTimeTyped }: ZoneListProps) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
@@ -60,6 +61,7 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder }: ZoneListProp
               info={info}
               canRemove={zones.length > 1}
               onRemove={() => onRemove(zone.id)}
+              onTimeTyped={onTimeTyped}
             />
           </div>
         );
