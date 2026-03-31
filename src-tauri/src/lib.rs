@@ -21,39 +21,52 @@ fn read_preferences(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 fn toggle_popup(app: tauri::AppHandle) -> Result<(), String> {
-    if let Some(main) = app.get_webview_window("main") {
-        if main.is_visible().unwrap_or(false) {
-            let _ = main.hide();
-        } else {
-            if let Some(bar) = app.get_webview_window("bar") {
-                if let (Ok(bar_pos), Ok(bar_size), Ok(main_size)) = (
-                    bar.outer_position(),
-                    bar.outer_size(),
-                    main.outer_size(),
-                ) {
-                    let x = bar_pos.x + bar_size.width as i32 - main_size.width as i32;
-                    let y = bar_pos.y - main_size.height as i32 - 4;
-                    let _ = main.set_position(tauri::Position::Physical(
-                        tauri::PhysicalPosition { x: x.max(0), y: y.max(0) },
-                    ));
-                }
-            }
-            let _ = main.show();
-            let _ = main.set_focus();
-            let _ = main.emit("popover-opened", ()).ok();
+    let Some(main) = app.get_webview_window("main") else { return Ok(()); };
+
+    if main.is_visible().unwrap_or(false) {
+        let _ = main.hide();
+        return Ok(());
+    }
+
+    // Position popup above the taskbar on the same monitor as the bar widget
+    if let Some(bar) = app.get_webview_window("bar") {
+        if let (Ok(bar_pos), Ok(bar_size), Ok(main_size)) = (bar.outer_position(), bar.outer_size(), main.outer_size()) {
+            let (x, y): (i32, i32) = if let Ok(Some(monitor)) = bar.current_monitor() {
+                let scale = monitor.scale_factor();
+                let mon_pos = monitor.position();
+                let mon_size = monitor.size();
+                let taskbar_physical = (48.0 * scale) as i32;
+                let popup_w = (280.0 * scale) as i32;
+                (
+                    mon_pos.x + mon_size.width as i32 - popup_w,
+                    mon_pos.y + mon_size.height as i32 - taskbar_physical - main_size.height as i32 - 4,
+                )
+            } else {
+                (
+                    bar_pos.x + bar_size.width as i32 - 280,
+                    bar_pos.y - main_size.height as i32 - 4,
+                )
+            };
+            let _ = main.set_position(tauri::Position::Physical(
+                tauri::PhysicalPosition { x: x.max(0), y: y.max(0) },
+            ));
         }
     }
+
+    let _ = main.show();
+    let _ = main.set_focus();
+    let _ = main.emit("popover-opened", ()).ok();
     Ok(())
 }
 
 #[tauri::command]
 fn resize_window(app: tauri::AppHandle, height: f64) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
-        let current_size = window.outer_size().map_err(|e| e.to_string())?;
         let scale = window.scale_factor().unwrap_or(1.0);
+        let physical_width = (280.0 * scale) as u32;
         let physical_height = (height * scale) as u32;
         let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
-            width: current_size.width,
+            width: physical_width,
             height: physical_height,
         }));
     }
