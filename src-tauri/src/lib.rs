@@ -20,6 +20,33 @@ fn read_preferences(app: tauri::AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn toggle_popup(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(main) = app.get_webview_window("main") {
+        if main.is_visible().unwrap_or(false) {
+            let _ = main.hide();
+        } else {
+            if let Some(bar) = app.get_webview_window("bar") {
+                if let (Ok(bar_pos), Ok(bar_size), Ok(main_size)) = (
+                    bar.outer_position(),
+                    bar.outer_size(),
+                    main.outer_size(),
+                ) {
+                    let x = bar_pos.x + bar_size.width as i32 - main_size.width as i32;
+                    let y = bar_pos.y - main_size.height as i32 - 4;
+                    let _ = main.set_position(tauri::Position::Physical(
+                        tauri::PhysicalPosition { x: x.max(0), y: y.max(0) },
+                    ));
+                }
+            }
+            let _ = main.show();
+            let _ = main.set_focus();
+            let _ = main.emit("popover-opened", ()).ok();
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn resize_window(app: tauri::AppHandle, height: f64) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         let current_size = window.outer_size().map_err(|e| e.to_string())?;
@@ -49,10 +76,12 @@ fn toggle_popover(window: &WebviewWindow, tray_bounds: Option<(f64, f64, f64, f6
         #[cfg(target_os = "windows")]
         {
             // On Windows the taskbar is at the bottom, so TrayBottomCenter would place
-            // the window below the screen. Instead, position it above the tray icon.
+            // the window below the screen. Instead, right-align to the tray icon and
+            // appear above it — matching Windows convention (Action Center, calendar, etc.).
             if let Some((tray_x, tray_y, tray_w, _)) = tray_bounds {
                 if let Ok(win_size) = window.outer_size() {
-                    let x = (tray_x + tray_w / 2.0) as i32 - (win_size.width / 2) as i32;
+                    // Right edge of window aligns with right edge of tray icon
+                    let x = (tray_x + tray_w) as i32 - win_size.width as i32;
                     let y = tray_y as i32 - win_size.height as i32;
                     let _ = window.set_position(tauri::Position::Physical(
                         tauri::PhysicalPosition { x: x.max(0), y: y.max(0) },
@@ -77,7 +106,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![read_preferences, write_preferences, resize_window])
+        .invoke_handler(tauri::generate_handler![read_preferences, write_preferences, resize_window, toggle_popup])
         .setup(|app| {
             // Hide from Dock on macOS
             #[cfg(target_os = "macos")]
@@ -124,7 +153,7 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Hide popover on focus loss
+            // Hide popover on focus loss (main popup only, not the bar)
             if let Some(window) = app.get_webview_window("main") {
                 let w = window.clone();
                 window.on_window_event(move |event| {
@@ -132,6 +161,31 @@ pub fn run() {
                         let _ = w.hide();
                     }
                 });
+            }
+
+            // On Windows: position and show the always-visible taskbar bar
+            #[cfg(target_os = "windows")]
+            {
+                if let Some(bar) = app.get_webview_window("bar") {
+                    if let Ok(Some(monitor)) = bar.primary_monitor() {
+                        let scale = bar.scale_factor().unwrap_or(1.0);
+                        let phys = monitor.size();
+                        // Convert screen size to logical pixels for positioning
+                        let screen_w = phys.width as f64 / scale;
+                        let screen_h = phys.height as f64 / scale;
+                        // Windows taskbar is ~40px (Win10) or ~48px (Win11), clock ~130px wide
+                        let taskbar_h = 48.0f64;
+                        let clock_w  = 130.0f64;
+                        let bar_w    = 300.0f64;
+                        let bar_h    = 40.0f64;
+                        let x = screen_w - bar_w - clock_w;
+                        let y = screen_h - taskbar_h + (taskbar_h - bar_h) / 2.0;
+                        let _ = bar.set_position(tauri::Position::Logical(
+                            tauri::LogicalPosition { x, y },
+                        ));
+                        let _ = bar.show();
+                    }
+                }
             }
 
             Ok(())

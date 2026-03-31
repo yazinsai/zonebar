@@ -61,3 +61,23 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+
+/* Bar window — floats in taskbar, no panel chrome */
+body.bar-window #root {
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  height: 100vh;
+}
+
+body.bar-window .bar-root {
+  /* rgba > 0 so Windows captures click events on transparent windows */
+  background: rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+body.bar-window .bar-root:hover {
+  background: rgba(255, 255, 255, 0.08);
+}

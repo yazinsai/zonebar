@@ -52,7 +52,7 @@ export function TimeDisplay({ selectedInstant, mode, onTimeTyped }: TimeDisplayP
 
   if (editing) {
     return (
-      <div className="flex items-center justify-center py-3 px-5 border-b border-white/[0.06]">
+      <div className="flex items-center justify-center py-1.5 px-3 border-b border-white/[0.06]">
         <input
           ref={inputRef}
           type="text"
@@ -68,7 +68,7 @@ export function TimeDisplay({ selectedInstant, mode, onTimeTyped }: TimeDisplayP
   }
 
   return (
-    <div className="flex items-center justify-center py-3 px-5 border-b border-white/[0.06]">
+    <div className="flex items-center justify-center py-1.5 px-3 border-b border-white/[0.06]">
       <button
         onClick={handleClick}
         className="text-[#4ade80] text-sm font-semibold cursor-pointer bg-transparent border-none hover:text-[#22c55e] transition-colors tracking-wide"
