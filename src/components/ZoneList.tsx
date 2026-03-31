@@ -47,6 +47,8 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder, onTimeTyped }:
         const info = zoneInfos.get(zone.id);
         if (!info) return null;
 
+        const isOver = overIndex === index && dragIndex !== null && dragIndex !== index;
+
         return (
           <div
             key={zone.id}
@@ -54,6 +56,7 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder, onTimeTyped }:
             onDragStart={(e) => handleDragStart(e, index)}
             onDragEnd={handleDragEnd}
             onDragOver={(e) => handleDragOver(e, index)}
+            style={{ cursor: "grab", borderTop: isOver ? "1px solid rgba(74,222,128,0.4)" : "1px solid transparent" }}
           >
             <ZoneRow
               zoneId={zone.id}
