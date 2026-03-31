@@ -20,6 +20,9 @@ concurrency:
 
 jobs:
   gate-check:
+    if: >-
+      github.event_name != 'pull_request_target'
+      || github.event.label.name == 'state:ready-to-merge'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -118,7 +121,7 @@ jobs:
             fi
 
             echo "PR #${PR_NUMBER}: all gates passed, merging with ${MERGE_METHOD}"
-            gh pr merge "$PR_NUMBER" --"${MERGE_METHOD}" --auto
+            gh pr merge "$PR_NUMBER" --"${MERGE_METHOD}" --delete-branch --auto
 
             # Post-merge labels
             gh pr edit "$PR_NUMBER" --add-label "resolution:merged,state:done" --remove-label "state:ready-to-merge"
