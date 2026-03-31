@@ -4,10 +4,11 @@
 
 **Stop doing timezone math in your head.**
 
-A Mac menu bar app that shows the time everywhere you care about.
+A macOS and Windows tray app that shows the time everywhere you care about.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/macOS-14%2B-000?logo=apple&logoColor=white)](https://github.com/yazinsai/zonebar/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-10%2B-0078D4?logo=windows&logoColor=white)](https://github.com/yazinsai/zonebar/releases/latest)
 [![GitHub release](https://img.shields.io/github/v/release/yazinsai/zonebar?color=%234ade80)](https://github.com/yazinsai/zonebar/releases/latest)
 [![GitHub downloads](https://img.shields.io/github/downloads/yazinsai/zonebar/total?color=%234ade80)](https://github.com/yazinsai/zonebar/releases/latest)
 
@@ -15,6 +16,10 @@ A Mac menu bar app that shows the time everywhere you care about.
 
 <a href="https://github.com/yazinsai/zonebar/releases/latest">
   <img src="https://img.shields.io/badge/Download_for_Mac-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for Mac" height="40" />
+</a>
+&nbsp;
+<a href="https://github.com/yazinsai/zonebar/releases/latest">
+  <img src="https://img.shields.io/badge/Download_for_Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" height="40" />
 </a>
 
 <br /><br />
@@ -31,9 +36,15 @@ Click the clock in your menu bar. See the time in every zone you've added — wi
 
 ## Install
 
+**macOS**
 1. [Download the DMG](https://github.com/yazinsai/zonebar/releases/latest)
 2. Drag ZoneBar to Applications
 3. Launch — look for the clock in your menu bar
+
+**Windows**
+1. [Download the MSI installer](https://github.com/yazinsai/zonebar/releases/latest)
+2. Run the installer
+3. Launch ZoneBar — look for the clock icon in the system tray (bottom-right)
 
 ## Features
 

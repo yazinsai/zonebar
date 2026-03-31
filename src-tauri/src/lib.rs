@@ -42,11 +42,30 @@ fn write_preferences(app: tauri::AppHandle, data: String) -> Result<(), String> 
     fs::write(&path, data).map_err(|e| e.to_string())
 }
 
-fn toggle_popover(window: &WebviewWindow) {
+fn toggle_popover(window: &WebviewWindow, tray_bounds: Option<(f64, f64, f64, f64)>) {
     if window.is_visible().unwrap_or(false) {
         let _ = window.hide();
     } else {
-        let _ = window.move_window(Position::TrayBottomCenter);
+        #[cfg(target_os = "windows")]
+        {
+            // On Windows the taskbar is at the bottom, so TrayBottomCenter would place
+            // the window below the screen. Instead, position it above the tray icon.
+            if let Some((tray_x, tray_y, tray_w, _)) = tray_bounds {
+                if let Ok(win_size) = window.outer_size() {
+                    let x = (tray_x + tray_w / 2.0) as i32 - (win_size.width / 2) as i32;
+                    let y = tray_y as i32 - win_size.height as i32;
+                    let _ = window.set_position(tauri::Position::Physical(
+                        tauri::PhysicalPosition { x: x.max(0), y: y.max(0) },
+                    ));
+                }
+            } else {
+                let _ = window.move_window(Position::TrayCenter);
+            }
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let _ = window.move_window(Position::TrayBottomCenter);
+        }
         let _ = window.show();
         let _ = window.set_focus();
         let _ = window.emit("popover-opened", ());
@@ -79,7 +98,7 @@ pub fn run() {
                 .icon_as_template(true)
                 .tooltip("ZoneBar")
                 .menu(&menu)
-                .menu_on_left_click(false)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| {
                     if event.id.as_ref() == "quit" {
                         app.exit(0);
@@ -87,10 +106,18 @@ pub fn run() {
                 })
                 .on_tray_icon_event(move |tray_handle, event| {
                     tauri_plugin_positioner::on_tray_event(tray_handle.app_handle(), &event);
-                    if let TrayIconEvent::Click { button_state, .. } = &event {
+                    if let TrayIconEvent::Click { button_state, rect, .. } = &event {
                         if matches!(button_state, MouseButtonState::Up) {
                             if let Some(window) = tray_handle.app_handle().get_webview_window("main") {
-                                toggle_popover(&window);
+                                let (tray_x, tray_y) = match &rect.position {
+                                    tauri::Position::Physical(p) => (p.x as f64, p.y as f64),
+                                    tauri::Position::Logical(l) => (l.x, l.y),
+                                };
+                                let (tray_w, tray_h) = match &rect.size {
+                                    tauri::Size::Physical(s) => (s.width as f64, s.height as f64),
+                                    tauri::Size::Logical(s) => (s.width, s.height),
+                                };
+                                toggle_popover(&window, Some((tray_x, tray_y, tray_w, tray_h)));
                             }
                         }
                     }
