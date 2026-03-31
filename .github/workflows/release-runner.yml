@@ -1,6 +1,8 @@
 name: Release Runner
 
 on:
+  push:
+    branches: [main]
   workflow_run:
     workflows: ["Build and Release"]
     types: [completed]
@@ -13,10 +15,13 @@ permissions:
 
 concurrency:
   group: release-runner
+  cancel-in-progress: true
 
 jobs:
   release:
-    if: "${{ github.event.workflow_run.conclusion == 'success' }}"
+    if: >-
+      github.event_name == 'push'
+      || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -29,7 +34,7 @@ jobs:
         env:
           GH_TOKEN: "${{ secrets.AUTO_MAINTAINER_PAT }}"
         run: |
-          HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+          HEAD_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
 
           # Find latest semver tag
           LATEST_TAG=$(git tag --list 'v*' --sort=-v:refname | head -1)
