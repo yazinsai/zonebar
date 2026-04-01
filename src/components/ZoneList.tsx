@@ -14,9 +14,12 @@ interface ZoneListProps {
 export function ZoneList({ zones, zoneInfos, onRemove, onReorder, onTimeTyped }: ZoneListProps) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
+  const overIndexRef = useRef<number | null>(null);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    dragIndexRef.current = index;
     setDragIndex(index);
     dragNodeRef.current = e.currentTarget as HTMLDivElement;
     e.dataTransfer.effectAllowed = "move";
@@ -27,9 +30,11 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder, onTimeTyped }:
 
   const handleDragEnd = () => {
     if (dragNodeRef.current) dragNodeRef.current.style.opacity = "1";
-    if (dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
-      onReorder(dragIndex, overIndex);
+    if (dragIndexRef.current !== null && overIndexRef.current !== null && dragIndexRef.current !== overIndexRef.current) {
+      onReorder(dragIndexRef.current, overIndexRef.current);
     }
+    dragIndexRef.current = null;
+    overIndexRef.current = null;
     setDragIndex(null);
     setOverIndex(null);
     dragNodeRef.current = null;
@@ -38,6 +43,7 @@ export function ZoneList({ zones, zoneInfos, onRemove, onReorder, onTimeTyped }:
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    overIndexRef.current = index;
     setOverIndex(index);
   };
 
