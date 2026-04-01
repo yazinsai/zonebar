@@ -54,7 +54,7 @@ export function ZoneRow({ zoneId, label, info, canRemove, onRemove, onTimeTyped 
   };
 
   return (
-    <div className="group flex items-center gap-1.5 px-5 py-[7px] hover:bg-white/[0.03] transition-colors">
+    <div className="group flex items-center gap-1.5 px-3 py-[4px] hover:bg-white/[0.03] transition-colors">
       {/* Zone label */}
       <div className="w-[72px] min-w-[72px] flex items-baseline gap-1">
         <span className="text-[11px]">{flag}</span>

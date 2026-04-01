@@ -7,7 +7,7 @@ interface TimeSliderProps {
 
 export function TimeSlider({ offset, onChange, onReset, mode }: TimeSliderProps) {
   return (
-    <div className="px-5 py-3 border-t border-white/[0.06]">
+    <div className="px-3 py-2 border-t border-white/[0.06]">
       <input
         type="range"
         min={-12}

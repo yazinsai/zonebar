@@ -24,7 +24,6 @@ function App() {
 
   // Auto-resize window to fit content
   useEffect(() => {
-    if (!loaded) return;
     const el = rootRef.current;
     if (!el) return;
     const resizeObserver = new ResizeObserver(() => {
@@ -35,7 +34,7 @@ function App() {
     });
     resizeObserver.observe(el);
     return () => resizeObserver.disconnect();
-  }, [loaded]);
+  }, []);
 
   // Global Esc handler
   useEffect(() => {
@@ -49,8 +48,6 @@ function App() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
-
-  if (!loaded) return null;
 
   return (
     <div ref={rootRef} className="flex flex-col">

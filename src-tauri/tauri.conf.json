@@ -15,7 +15,7 @@
       {
         "label": "main",
         "title": "ZoneBar",
-        "width": 320,
+        "width": 280,
         "height": 280,
         "visible": false,
         "decorations": false,
@@ -24,6 +24,19 @@
         "alwaysOnTop": true,
         "resizable": false,
         "focus": true
+      },
+      {
+        "label": "bar",
+        "title": "ZoneBar",
+        "width": 300,
+        "height": 40,
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "skipTaskbar": true,
+        "alwaysOnTop": true,
+        "resizable": false,
+        "focus": false
       }
     ],
     "security": {
