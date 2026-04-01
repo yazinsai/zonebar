@@ -69,7 +69,7 @@ npm install
 npm run tauri dev
 ```
 
-Requires [Rust](https://rustup.rs/) and [Node.js 22+](https://nodejs.org/).
+Requires [Rust](https://rustup.rs/) and [Node.js 22+](https://nodejs.org/). 
 
 ## Stack
 
