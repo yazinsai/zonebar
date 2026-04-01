@@ -38,7 +38,7 @@ jobs:
           fi
 
       - name: Run implement agent
-        uses: "anthropics/claude-code-action@88c168b39e7e64da0286d812b6e9fbebb6708185"
+        uses: "anthropics/claude-code-action@bee87b3258c251f9279e5371b0cc3660f37f3f77"
         with:
           prompt: |
             # Implementation Agent — System Prompt
@@ -155,23 +155,3 @@ jobs:
           github_token: "${{ secrets.AUTO_MAINTAINER_PAT }}"
           anthropic_api_key: "${{ secrets.ANTHROPIC_API_KEY }}"
           claude_code_oauth_token: "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}"
-
-      - name: Create PR if commits were pushed
-        env:
-          GH_TOKEN: "${{ secrets.AUTO_MAINTAINER_PAT }}"
-        run: |
-          # Check if there are new commits beyond the initial checkout
-          if [ "$(git rev-list --count HEAD ^origin/${{ github.event.repository.default_branch }})" -gt 0 ]; then
-            BRANCH="implement/issue-${{ github.event.issue.number }}"
-            git checkout -b "$BRANCH"
-            git push origin "$BRANCH"
-
-            # Collect labels from the issue
-            LABELS=$(gh issue view "${{ github.event.issue.number }}" --json labels --jq '[.labels[].name] | join(",")')
-
-            gh pr create \
-              --title "fix: resolve #${{ github.event.issue.number }}" \
-              --body "Closes #${{ github.event.issue.number }}" \
-              --label "$LABELS" \
-              --head "$BRANCH"
-          fi

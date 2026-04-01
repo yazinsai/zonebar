@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Run triage agent
-        uses: "anthropics/claude-code-action@88c168b39e7e64da0286d812b6e9fbebb6708185"
+        uses: "anthropics/claude-code-action@bee87b3258c251f9279e5371b0cc3660f37f3f77"
         with:
           prompt: |
             # Triage Agent — System Prompt
@@ -353,6 +353,7 @@ jobs:
             --- REPO POLICY ---
             ${{ steps.policy.outputs.content }}
           claude_args: "--allowedTools Read Grep Glob Bash(gh:*) --max-turns 15 --model claude-sonnet-4-6"
+          allowed_non_write_users: "*"
           github_token: "${{ secrets.AUTO_MAINTAINER_PAT }}"
           anthropic_api_key: "${{ secrets.ANTHROPIC_API_KEY }}"
           claude_code_oauth_token: "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}"
